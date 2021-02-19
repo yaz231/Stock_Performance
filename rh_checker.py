@@ -51,14 +51,27 @@ def quote_category():
         print("{} | {}".format(stock['symbol'], stock['last_trade_price']))
     # r.get_all_stocks_from_market_tag('technology')  # get all tech tags
 
+def add_ticker(df):
+    df['ticker'] = df[['instrument']].apply(lambda i: r.get_symbol_by_url(i.item()), axis=1)
+
 def get_positions():
     position_data = r.get_all_positions()
     df = pd.DataFrame(position_data)
-    df['ticker'] = df[['instrument']].apply(lambda i: r.get_symbol_by_url(i.item()), axis=1)
+    add_ticker(df)
     df['quantity'] = df['quantity'].astype(float)
     df['average_buy_price'] = df['average_buy_price'].astype(float)
     df = df[['ticker', 'quantity', 'average_buy_price', 'created_at']]
     df = df[df.quantity != 0]
+    return df
+
+def get_trades():
+    trades = r.get_all_stock_orders()
+    df = pd.DataFrame(trades)
+    add_ticker(df)
+    df = df[['ticker', 'average_price', 'price', 'quantity', 'type', 'side', 'executions']]
+    df.average_price = df.average_price.astype(float)
+    df.price = df.price.astype(float)
+    df.quantity = df.quantity.astype(float)
     return df
 
 def get_SP500(earliest_day):
@@ -82,7 +95,7 @@ def calculate_rate_return_SP500(date):
 
 def main():
     login()
-    positions = get_positions()
+    positions = get_trades()
     positions.to_csv('portfolio.csv')
     # quote_category()
     # get_portfolio()
