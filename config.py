@@ -1,0 +1,2 @@
+usr = 'USERNAME'
+pswd = 'PASSWORD'
