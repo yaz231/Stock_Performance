@@ -10,6 +10,7 @@ from Robin.config import usr, pswd
 
 earliest_date = ""
 today = str(date.today())
+print(today)
 year_today = int(today.split('-')[0])
 month_today = int(today.split('-')[1])
 day_today = int(today.split('-')[2])
@@ -76,7 +77,8 @@ def portfolio_to_txt():
     f.write("Ticker | Quantity | Average Price | Date Bought")
     f.write("\n")
     vals = portfolio.values
-    f.write(str(vals))
+    for entry in vals:
+        f.write(str(entry) + "\n")
     f.close()
 
 def get_SP500(earliest_day):
@@ -90,11 +92,19 @@ def get_SP500(earliest_day):
 
 def calculate_rate_return_SP500(date):
     df = pd.read_csv('GSPC.csv')
-    print(date)
-    print(df[date])
-    close = df[date]['Close']
+    df = df.set_index(pd.DatetimeIndex(df['Date'].values))
+    close = df.loc[date]['Close']
     close_today = df[today]['Close']
     return close/close_today - 1
+
+def compare_performance():
+    portfolio = get_all_stocks()
+    values = portfolio.values
+    for entry in values:
+        # print(entry)
+        ticker = entry[0]
+        date = entry[3]
+        print(ticker + " " + calculate_rate_return_SP500(date))
 
 # def calculate_rate_return_SP500(ticker):
 
@@ -117,6 +127,7 @@ def main():
     # print(r.get_all_positions(info=None))
     # print(get_all_stocks())
     # portfolio_to_txt()
+    compare_performance()
     # get_SP500(earliest_date)
     # with open('list.txt', 'r') as f:
     #     lines = f.readlines()[1:]
