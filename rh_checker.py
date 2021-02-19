@@ -5,8 +5,7 @@ import pandas as pd
 import datetime as dt
 from datetime import date
 import pandas_datareader as web
-from Robin.config import usr, pswd
-
+from config import usr, pswd
 
 earliest_date = ""
 today = str(date.today())
@@ -15,7 +14,7 @@ month_today = int(today.split('-')[1])
 day_today = int(today.split('-')[2])
 
 def login():
-    login = r.login(usr, pswd)
+    r.login(usr, pswd)
 
 def get_shares(ticker):
     positions_data = r.get_open_stock_positions()
@@ -24,7 +23,7 @@ def get_shares(ticker):
         if item['symbol'] == ticker:
             print("{} shares of {}".format(item['quantity'], item['symbol']))
 
-def get_portfolio():
+def get_open_positions():
     positions_data = r.get_open_stock_positions()
     with open('portfolio.txt', 'w') as f:
         for item in positions_data:
@@ -52,32 +51,15 @@ def quote_category():
         print("{} | {}".format(stock['symbol'], stock['last_trade_price']))
     # r.get_all_stocks_from_market_tag('technology')  # get all tech tags
 
-def get_all_stocks():
-    portfolio = pd.DataFrame(columns=['Ticker', 'Quantity', 'Average_Price', 'Date'])
-    list = r.get_all_positions(info=None)
-    for entry in list:
-        quantity = entry['quantity']
-        if quantity == '0.00000000':
-            continue
-        instrument = entry['instrument']
-        avg_price = entry['average_buy_price']
-        date = entry['created_at'].split('T')[0]
-        ticker = r.stocks.get_symbol_by_url(instrument)
-        portfolio = portfolio.append(pd.Series([ticker, quantity, avg_price, date], index=['Ticker', 'Quantity', 'Average_Price', 'Date']), ignore_index=True)
-    # portfolio = portfolio.set_index('Ticker')
-    # portfolio = portfolio.set_index(pd.DatetimeIndex(portfolio['Ticker'].values))
-    global earliest_date
-    earliest_date = portfolio['Date'].min()
-    return portfolio
-
-def portfolio_to_txt():
-    portfolio = get_all_stocks()
-    f = open('portfolio.txt', 'w')
-    f.write("Ticker | Quantity | Average Price | Date Bought")
-    f.write("\n")
-    vals = portfolio.values
-    f.write(str(vals))
-    f.close()
+def get_positions():
+    position_data = r.get_all_positions()
+    df = pd.DataFrame(position_data)
+    df['ticker'] = df[['instrument']].apply(lambda i: r.get_symbol_by_url(i.item()), axis=1)
+    df['quantity'] = df['quantity'].astype(float)
+    df['average_buy_price'] = df['average_buy_price'].astype(float)
+    df = df[['ticker', 'quantity', 'average_buy_price', 'created_at']]
+    df = df[df.quantity != 0]
+    return df
 
 def get_SP500(earliest_day):
     year = int(earliest_day.split('-')[0])
@@ -98,9 +80,10 @@ def calculate_rate_return_SP500(date):
 
 # def calculate_rate_return_SP500(ticker):
 
-
 def main():
     login()
+    positions = get_positions()
+    positions.to_csv('portfolio.csv')
     # quote_category()
     # get_portfolio()
     # get_shares('NIO')
@@ -124,7 +107,6 @@ def main():
     #         print(line[3])
     #         rr = calculate_rate_return_SP500(line[3])
     #         print(line[0] + "Return of: " + rr)
-
 
 
 if __name__ == '__main__':
