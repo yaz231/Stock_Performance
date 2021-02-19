@@ -36,11 +36,7 @@ def get_Net():
     my_stocks = r.build_holdings()
     profits, losses = 0, 0
     for key, value in my_stocks.items():
-        # print(key, value)
         change = float(value['equity_change'])
-        # print(change)
-        # print(float(change))
-        # print(type(float(change)))
         print("{} | {}".format(key, change))
         if change > 0:
             profits += change
@@ -68,7 +64,7 @@ def get_all_stocks():
         date = entry['created_at'].split('T')[0]
         ticker = r.stocks.get_symbol_by_url(instrument)
         portfolio = portfolio.append(pd.Series([ticker, quantity, avg_price, date], index=['Ticker', 'Quantity', 'Average_Price', 'Date']), ignore_index=True)
-    portfolio = portfolio.set_index('Ticker')
+    # portfolio = portfolio.set_index('Ticker')
     # portfolio = portfolio.set_index(pd.DatetimeIndex(portfolio['Ticker'].values))
     global earliest_date
     earliest_date = portfolio['Date'].min()
@@ -77,14 +73,10 @@ def get_all_stocks():
 def portfolio_to_txt():
     portfolio = get_all_stocks()
     f = open('portfolio.txt', 'w')
-    # f.write("Ticker" + ' | ' + "Quantity" + " | " + "Average Price" + ' | ' + "Date Purchased")
-    # f.write('\n')
-    # for entry in list:
-    #     f.write(str(entry))
-    #     f.write('\n')
+    f.write("Ticker | Quantity | Average Price | Date Bought")
+    f.write("\n")
     vals = portfolio.values
-    print(vals)
-    f.write(vals)
+    f.write(str(vals))
     f.close()
 
 def get_SP500(earliest_day):
@@ -98,19 +90,17 @@ def get_SP500(earliest_day):
 
 def calculate_rate_return_SP500(date):
     df = pd.read_csv('GSPC.csv')
-    df
     print(date)
-    # print(df[date])
-    # close = df[date]['Close']
-    # close_today = df[today]['Close']
-    # return close/close_today - 1
+    print(df[date])
+    close = df[date]['Close']
+    close_today = df[today]['Close']
+    return close/close_today - 1
 
 # def calculate_rate_return_SP500(ticker):
 
 
 def main():
     login()
-
     # quote_category()
     # get_portfolio()
     # get_shares('NIO')
@@ -126,7 +116,7 @@ def main():
     # get_Net()
     # print(r.get_all_positions(info=None))
     # print(get_all_stocks())
-    portfolio_to_txt()
+    # portfolio_to_txt()
     # get_SP500(earliest_date)
     # with open('list.txt', 'r') as f:
     #     lines = f.readlines()[1:]
